@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo Arcade - Desvie dos Obstáculos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #gameContainer {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        #gameCanvas {
+            border: 3px solid #fff;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: block;
+            margin: 0 auto;
+            touch-action: none;
+        }
+
+        #mobileControls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 10px;
+        }
+
+        .mobile-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.3);
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+
+        .mobile-btn:hover, .mobile-btn:active {
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.2));
+            transform: scale(0.95);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        @media (max-width: 768px) {
+            #mobileControls {
+                display: flex;
+            }
+        }
+
+        @media (min-width: 769px) {
+            #mobileControls {
+                display: none;
+            }
+        }
+
+        #gameUI {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        #score, #currentLevelDisplay {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        #lives {
+            display: flex;
+            gap: 5px;
+        }
+
+        .life {
+            font-size: 1.5em;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+        }
+
+        #controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,107,0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #menuBtn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            box-shadow: 0 4px 15px rgba(78,205,196,0.3);
+        }
+
+        #menuBtn:hover {
+            box-shadow: 0 6px 20px rgba(78,205,196,0.4);
+        }
+
+        #menu {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+
+        #menu h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #ffd93d;
+        }
+
+        #themeButtons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 500px;
+        }
+
+        .theme-btn {
+            padding: 15px 20px;
+            font-size: 1em;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            border-radius: 15px;
+            height: auto;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .theme-btn:hover {
+            background: linear-gradient(45deg, #44a08d, #4ecdc4);
+        }
+
+        .theme-btn .emoji {
+            font-size: 1.5em;
+        }
+
+        #colorPicker {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        #colorPicker input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: 3px solid white;
+            border-radius: 10px;
+            cursor: pointer;
+            background: none;
+        }
+
+        #colorPicker label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #ffd93d;
+        }
+
+        #levelButtons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+            max-width: 400px;
+        }
+
+        .level-btn {
+            padding: 10px;
+            font-size: 0.9em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+            width: 60px;
+            height: 40px;
+        }
+
+        .level-btn:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+        }
+
+        #infiniteBtn {
+            background: linear-gradient(45deg, #ffd93d, #ff6b6b);
+            padding: 15px 30px;
+            font-size: 1.1em;
+            margin-top: 20px;
+        }
+
+        #message {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        #scoreList {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        #scoreList h3 {
+            margin-top: 0;
+            color: #ffd93d;
+            text-align: center;
+        }
+
+        #scoreList ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #scoreList li {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .instructions {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        .instructions p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        #currentLevelDisplay {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            #gameCanvas {
+                width: 90vw;
+                height: 60vh;
+            }
+            
+            #levelButtons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Arcade Dodge Game</h1>
+    
+    <div id="gameContainer">
+        <div id="gameUI">
+            <div id="score">Score: 0</div>
+            <div id="currentLevelDisplay">Nível: 1</div>
+            <div id="lives">
+                <div class="life">❤️</div>
+                <div class="life">❤️</div>
+                <div class="life">❤️</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        
+        <div id="controls">
+            <button id="restartBtn">🔄 Reiniciar</button>
+            <button id="menuBtn">🏠 Menu</button>
+        </div>
+        
+        <div id="mobileControls">
+            <div class="mobile-btn" id="leftBtn">⬅️</div>
+            <div class="mobile-btn" id="rightBtn">➡️</div>
+        </div>
+    </div>
+
+    <div id="menu">
+        <h2>Escolha o Tema e Modo de Jogo</h2>
+        
+        <div>
+            <h3>🎨 Tema Visual</h3>
+            <div id="themeButtons">
+                <button class="theme-btn" data-theme="shapes">
+                    <div class="emoji">🔷</div>
+                    <div>Formas Geométricas</div>
+                </button>
+                <button class="theme-btn" data-theme="triangles">
+                    <div class="emoji">🔺</div>
+                    <div>Só Triângulos</div>
+                </button>
+                <button class="theme-btn" data-theme="squares">
+                    <div class="emoji">⬜</div>
+                    <div>Só Quadrados</div>
+                </button>
+                <button class="theme-btn" data-theme="cars">
+                    <div class="emoji">🏎️</div>
+                    <div>Corrida de Carros</div>
+                </button>
+                <button class="theme-btn" data-theme="bikes">
+                    <div class="emoji">🏍️</div>
+                    <div>Corrida de Motos</div>
+                </button>
+            </div>
+        </div>
+
+        <div id="colorPicker">
+            <label>🎨 Cor do seu personagem:</label>
+            <input type="color" id="playerColorInput" value="#00ff00">
+        </div>
+        
+        <div>
+            <h3>Modo por Níveis</h3>
+            <div id="levelButtons">
+                <button class="level-btn" data-level="1">1</button>
+                <button class="level-btn" data-level="2">2</button>
+                <button class="level-btn" data-level="3">3</button>
+                <button class="level-btn" data-level="4">4</button>
+                <button class="level-btn" data-level="5">5</button>
+                <button class="level-btn" data-level="6">6</button>
+                <button class="level-btn" data-level="7">7</button>
+                <button class="level-btn" data-level="8">8</button>
+                <button class="level-btn" data-level="9">9</button>
+                <button class="level-btn" data-level="10">10</button>
+            </div>
+        </div>
+        
+        <button id="infiniteBtn">🚀 Modo Infinito</button>
+    </div>
+
+    <div id="message"></div>
+
+    <div id="scoreList">
+        <h3>🏆 Melhores Pontuações</h3>
+        <ul id="highScores"></ul>
+    </div>
+
+    <div class="instructions">
+        <p><strong>🎯 Como Jogar:</strong></p>
+        <p>Use as setas ← e → para mover o quadrado verde</p>
+        <p>Desvie dos obstáculos vermelhos que caem do topo</p>
+        <p>Você tem 3 vidas ❤️ - Boa sorte!</p>
+    </div>
+
+    <script>
+        // Elementos do DOM
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const messageElement = document.getElementById('message');
+        const menuElement = document.getElementById('menu');
+        const restartBtn = document.getElementById('restartBtn');
+        const menuBtn = document.getElementById('menuBtn');
+        const infiniteBtn = document.getElementById('infiniteBtn');
+        const levelButtons = document.querySelectorAll('.level-btn');
+        const highScoresElement = document.getElementById('highScores');
+        const currentLevelDisplay = document.getElementById('currentLevelDisplay');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        const playerColorInput = document.getElementById('playerColorInput');
+
+        // Variáveis do jogo
+        let score = 0;
+        let vidas = 3;
+        let modoAtual = 'infinito';
+        let nivelAtual = 1;
+        let temaAtual = 'shapes';
+        let obstacleSpeed = 2;
+        let spawnRate = 800;
+        let isGameOver = false;
+        let isGameRunning = false;
+        let gameWon = false;
+        let obstacleCount = 0;
+        let obstaclesPassed = 0;
+        let requiredObstacles = 0;
+        let showFinishLine = false;
+
+        // Jogador
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 60,
+            width: 50,
+            height: 50,
+            speed: 6,
+            color: '#00ff00'
+        };
+
+        // Obstáculos com diferentes formas e temas
+        let obstacles = [];
+        let obstacleSpawnTimer = 0;
+        let gameLoop;
+        let obstacleSpawnInterval;
+        
+        // Tipos de obstáculos por tema
+        const obstacleThemes = {
+            shapes: ['square', 'triangle', 'circle'],
+            triangles: ['triangle'],
+            squares: ['square'],
+            cars: ['car'],
+            bikes: ['bike']
+        };
+
+        // Teclas e controles mobile
+        const keys = {};
+        let mobileLeft = false;
+        let mobileRight = false;
+
+        // Configurações por nível (velocidade mais rápida e progressão melhor)
+        const levelConfigs = {
+            1: { speed: 2, obstacles: 8, spawnRate: 1200 },
+            2: { speed: 2.8, obstacles: 12, spawnRate: 1000 },
+            3: { speed: 3.6, obstacles: 16, spawnRate: 900 },
+            4: { speed: 4.4, obstacles: 20, spawnRate: 800 },
+            5: { speed: 5.2, obstacles: 24, spawnRate: 750 },
+            6: { speed: 6, obstacles: 28, spawnRate: 700 },
+            7: { speed: 6.8, obstacles: 32, spawnRate: 650 },
+            8: { speed: 7.6, obstacles: 36, spawnRate: 600 },
+            9: { speed: 8.4, obstacles: 40, spawnRate: 550 },
+            10: { speed: 9.2, obstacles: 45, spawnRate: 500 }
+        };
+
+        // Event listeners para teclado
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // Event listeners para controles mobile
+        leftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            mobileLeft = true;
+        });
+
+        leftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            mobileLeft = false;
+        });
+
+        leftBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            mobileLeft = true;
+        });
+
+        leftBtn.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            mobileLeft = false;
+        });
+
+        rightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            mobileRight = true;
+        });
+
+        rightBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            mobileRight = false;
+        });
+
+        rightBtn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            mobileRight = true;
+        });
+
+        rightBtn.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            mobileRight = false;
+        });
+
+        restartBtn.addEventListener('click', () => {
+            startGame(modoAtual, nivelAtual);
+        });
+
+        menuBtn.addEventListener('click', () => {
+            showMenu();
+        });
+
+        infiniteBtn.addEventListener('click', () => {
+            startGame('infinito', 1);
+        });
+
+        levelButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const level = parseInt(e.target.dataset.level);
+                startGame('nivel', level);
+            });
+        });
+
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove seleção anterior
+                themeButtons.forEach(b => b.style.background = 'linear-gradient(45deg, #4ecdc4, #44a08d)');
+                // Adiciona seleção atual
+                e.target.closest('.theme-btn').style.background = 'linear-gradient(45deg, #ffd93d, #ff6b6b)';
+                temaAtual = e.target.closest('.theme-btn').dataset.theme;
+            });
+        });
+
+        playerColorInput.addEventListener('change', (e) => {
+            player.color = e.target.value;
+        });
+
+        // Função para iniciar o jogo
+        function startGame(modo, nivel) {
+            modoAtual = modo;
+            nivelAtual = nivel;
+            score = 0;
+            vidas = 3;
+            isGameOver = false;
+            isGameRunning = true;
+            gameWon = false;
+            obstacleCount = 0;
+            obstaclesPassed = 0;
+            obstacles = [];
+            showFinishLine = false;
+            
+            // Reset player position
+            player.x = canvas.width / 2 - 25;
+            player.y = canvas.height - 60;
+            
+            if (modo === 'infinito') {
+                obstacleSpeed = 3;
+                spawnRate = 800;
+                requiredObstacles = Infinity;
+                currentLevelDisplay.style.display = 'none';
+            } else {
+                const config = levelConfigs[nivel];
+                obstacleSpeed = config.speed;
+                spawnRate = config.spawnRate;
+                requiredObstacles = config.obstacles;
+                currentLevelDisplay.style.display = 'block';
+                currentLevelDisplay.textContent = `Nível: ${nivel}`;
+            }
+            
+            hideMenu();
+            clearMessage();
+            updateDisplay();
+            
+            // Limpar intervalos anteriores
+            if (gameLoop) cancelAnimationFrame(gameLoop);
+            if (obstacleSpawnInterval) clearInterval(obstacleSpawnInterval);
+            
+            // Iniciar spawn de obstáculos
+            obstacleSpawnInterval = setInterval(spawnObstacle, spawnRate);
+            
+            // Iniciar loop do jogo
+            loop();
+        }
+
+        // Função para mostrar menu
+        function showMenu() {
+            isGameRunning = false;
+            menuElement.style.display = 'block';
+            currentLevelDisplay.style.display = 'none';
+            clearMessage();
+            
+            // Parar loops
+            if (gameLoop) cancelAnimationFrame(gameLoop);
+            if (obstacleSpawnInterval) clearInterval(obstacleSpawnInterval);
+            
+            // Limpar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+        }
+
+        // Função para esconder menu
+        function hideMenu() {
+            menuElement.style.display = 'none';
+        }
+
+        // Função para spawnar obstáculos com diferentes formas e temas
+        function spawnObstacle() {
+            if (!isGameRunning || isGameOver) return;
+            
+            // Mostrar linha de chegada quando estiver próximo do fim
+            if (modoAtual === 'nivel' && obstaclesPassed >= requiredObstacles - 3) {
+                showFinishLine = true;
+            }
+            
+            const availableTypes = obstacleThemes[temaAtual];
+            const typeIndex = Math.floor(Math.random() * availableTypes.length);
+            const obstacle = {
+                x: Math.random() * (canvas.width - 40),
+                y: -40,
+                width: 40,
+                height: 40,
+                color: getObstacleColor(),
+                type: availableTypes[typeIndex]
+            };
+            
+            obstacles.push(obstacle);
+            obstacleCount++;
+        }
+
+        // Função para definir cores dos obstáculos baseado no tema
+        function getObstacleColor() {
+            switch (temaAtual) {
+                case 'cars':
+                    const carColors = ['#ff0000', '#0000ff', '#ffff00', '#ff8c00', '#8b0000'];
+                    return carColors[Math.floor(Math.random() * carColors.length)];
+                case 'bikes':
+                    const bikeColors = ['#000000', '#ff4500', '#32cd32', '#ff1493', '#4169e1'];
+                    return bikeColors[Math.floor(Math.random() * bikeColors.length)];
+                default:
+                    return '#ff0000';
+            }
+        }
+
+        // Função principal do loop do jogo
+        function loop() {
+            if (!isGameRunning) return;
+            
+            update();
+            draw();
+            
+            if (!isGameOver && !gameWon) {
+                gameLoop = requestAnimationFrame(loop);
+            }
+        }
+
+        // Função para atualizar a lógica do jogo
+        function update() {
+            if (isGameOver || gameWon) return;
+            
+            // Movimento do jogador (teclado e mobile)
+            if ((keys['ArrowLeft'] || mobileLeft) && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if ((keys['ArrowRight'] || mobileRight) && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            }
+            
+            // Atualizar obstáculos
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obstacle = obstacles[i];
+                obstacle.y += obstacleSpeed;
+                
+                // Verificar colisão
+                if (checkCollision(player, obstacle)) {
+                    obstacles.splice(i, 1);
+                    vidas--;
+                    updateDisplay();
+                    
+                    if (vidas <= 0) {
+                        gameOver();
+                        return;
+                    }
+                }
+                // Remover obstáculos que saíram da tela
+                else if (obstacle.y > canvas.height) {
+                    obstacles.splice(i, 1);
+                    obstaclesPassed++;
+                    
+                    if (modoAtual === 'infinito') {
+                        score += 10;
+                        // Aumentar velocidade a cada 8 obstáculos
+                        if (obstaclesPassed % 8 === 0) {
+                            obstacleSpeed += 0.7;
+                        }
+                    } else {
+                        score += 15;
+                        // Verificar vitória no modo por níveis
+                        if (obstaclesPassed >= requiredObstacles) {
+                            gameWon = true;
+                            showVictory();
+                            return;
+                        }
+                    }
+                    updateDisplay();
+                }
+            }
+        }
+
+        // Função para desenhar
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Desenhar background baseado no tema
+            drawBackground();
+            
+            // Desenhar linha de chegada se necessário
+            if (showFinishLine) {
+                drawFinishLine();
+            }
+            
+            // Desenhar jogador baseado no tema
+            drawPlayer();
+            
+            // Desenhar obstáculos com diferentes formas
+            obstacles.forEach(obstacle => {
+                ctx.fillStyle = obstacle.color;
+                drawObstacle(obstacle);
+            });
+            
+            // Desenhar progresso no modo por níveis
+            if (modoAtual === 'nivel') {
+                drawProgressBar();
+            }
+        }
+
+        // Função para desenhar o jogador baseado no tema
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            
+            switch (temaAtual) {
+                case 'cars':
+                    drawCar(player.x, player.y, player.width, player.height, player.color, true);
+                    break;
+                case 'bikes':
+                    drawBike(player.x, player.y, player.width, player.height, player.color, true);
+                    break;
+                default:
+                    ctx.fillRect(player.x, player.y, player.width, player.height);
+                    break;
+            }
+        }
+
+        // Função para desenhar diferentes tipos de obstáculos
+        function drawObstacle(obstacle) {
+            const centerX = obstacle.x + obstacle.width / 2;
+            const centerY = obstacle.y + obstacle.height / 2;
+            
+            switch (obstacle.type) {
+                case 'square':
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                    break;
+                case 'triangle':
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, obstacle.y);
+                    ctx.lineTo(obstacle.x, obstacle.y + obstacle.height);
+                    ctx.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    break;
+                case 'circle':
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, obstacle.width / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                case 'car':
+                    drawCar(obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.color, false);
+                    break;
+                case 'bike':
+                    drawBike(obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.color, false);
+                    break;
+            }
+        }
+
+        // Função para desenhar carros
+        function drawCar(x, y, width, height, color, isPlayer) {
+            // Corpo principal do carro
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y + height * 0.2, width, height * 0.6);
+            
+            // Teto do carro
+            ctx.fillRect(x + width * 0.15, y, width * 0.7, height * 0.4);
+            
+            // Janelas
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(x + width * 0.2, y + height * 0.05, width * 0.6, height * 0.25);
+            
+            // Rodas
+            ctx.fillStyle = '#333333';
+            const wheelRadius = width * 0.1;
+            ctx.beginPath();
+            ctx.arc(x + width * 0.2, y + height * 0.9, wheelRadius, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.8, y + height * 0.9, wheelRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Faróis (apenas para o jogador virado para cima)
+            if (isPlayer) {
+                ctx.fillStyle = '#FFFF99';
+                ctx.fillRect(x + width * 0.1, y, width * 0.15, height * 0.1);
+                ctx.fillRect(x + width * 0.75, y, width * 0.15, height * 0.1);
+            } else {
+                // Lanternas traseiras para carros vindo em direção contrária
+                ctx.fillStyle = '#FF0000';
+                ctx.fillRect(x + width * 0.1, y + height * 0.9, width * 0.15, height * 0.1);
+                ctx.fillRect(x + width * 0.75, y + height * 0.9, width * 0.15, height * 0.1);
+            }
+        }
+
+        // Função para desenhar motos
+        function drawBike(x, y, width, height, color, isPlayer) {
+            // Corpo da moto
+            ctx.fillStyle = color;
+            ctx.fillRect(x + width * 0.3, y + height * 0.3, width * 0.4, height * 0.4);
+            
+            // Guidão/Assento
+            ctx.fillRect(x + width * 0.2, y + height * 0.1, width * 0.6, height * 0.15);
+            
+            // Rodas
+            ctx.fillStyle = '#333333';
+            const wheelRadius = width * 0.15;
+            ctx.beginPath();
+            ctx.arc(x + width * 0.2, y + height * 0.8, wheelRadius, 0, Math.PI * 2);
+            ctx.arc(x + width * 0.8, y + height * 0.8, wheelRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Farol/Lanterna
+            if (isPlayer) {
+                ctx.fillStyle = '#FFFF99';
+                ctx.beginPath();
+                ctx.arc(x + width * 0.5, y + height * 0.1, width * 0.08, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                ctx.fillStyle = '#FF0000';
+                ctx.beginPath();
+                ctx.arc(x + width * 0.5, y + height * 0.9, width * 0.08, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Função para desenhar linha de chegada
+        function drawFinishLine() {
+            const lineY = 50;
+            const lineHeight = 8;
+            const squareSize = 20;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, lineY, canvas.width, lineHeight);
+            
+            // Padrão xadrez da linha de chegada
+            ctx.fillStyle = '#000000';
+            for (let x = 0; x < canvas.width; x += squareSize) {
+                for (let y = lineY; y < lineY + lineHeight; y += squareSize) {
+                    if ((Math.floor(x / squareSize) + Math.floor(y / squareSize)) % 2 === 0) {
+                        ctx.fillRect(x, y, squareSize, squareSize);
+                    }
+                }
+            }
+            
+            // Texto "META"
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🏁 META 🏁', canvas.width / 2, lineY - 10);
+        }
+
+        // Função para desenhar background
+        function drawBackground() {
+            let gradient;
+            
+            switch (temaAtual) {
+                case 'cars':
+                case 'bikes':
+                    // Background de estrada
+                    gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#2F4F2F');
+                    gradient.addColorStop(1, '#1C1C1C');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Desenhar faixas da estrada
+                    drawRoadLines();
+                    break;
+                default:
+                    // Background padrão
+                    gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, '#1e3c72');
+                    gradient.addColorStop(1, '#2a5298');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    break;
+            }
+        }
+
+        // Função para desenhar as linhas da estrada
+        function drawRoadLines() {
+            ctx.strokeStyle = '#FFFF00';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([20, 15]);
+            
+            // Linha central
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            
+            // Linhas laterais
+            ctx.setLineDash([]);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#FFFFFF';
+            
+            ctx.beginPath();
+            ctx.moveTo(50, 0);
+            ctx.lineTo(50, canvas.height);
+            ctx.moveTo(canvas.width - 50, 0);
+            ctx.lineTo(canvas.width - 50, canvas.height);
+            ctx.stroke();
+        }
+
+        // Função para desenhar barra de progresso
+        function drawProgressBar() {
+            const progress = obstaclesPassed / requiredObstacles;
+            const barWidth = canvas.width - 40;
+            const barHeight = 10;
+            const barX = 20;
+            const barY = 20;
+            
+            // Barra de fundo
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+            
+            // Barra de progresso
+            ctx.fillStyle = '#00ff00';
+            ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+            
+            // Texto do progresso
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${obstaclesPassed}/${requiredObstacles}`, canvas.width / 2, barY + 25);
+        }
+
+        // Função para verificar colisão
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+
+        // Função para game over
+        function gameOver() {
+            isGameOver = true;
+            isGameRunning = false;
+            
+            if (obstacleSpawnInterval) clearInterval(obstacleSpawnInterval);
+            
+            if (modoAtual === 'infinito') {
+                saveHighScore(score);
+                renderHighScores();
+                showMessage(`🎮 Game Over! Pontuação Final: ${score}`);
+            } else {
+                showMessage(`💀 Você perdeu! Tente novamente.`);
+            }
+        }
+
+        // Função para mostrar vitória
+        function showVictory() {
+            isGameRunning = false;
+            
+            if (obstacleSpawnInterval) clearInterval(obstacleSpawnInterval);
+            
+            let stars = '';
+            let message = '';
+            
+            if (vidas === 3) {
+                stars = '⭐⭐⭐';
+                message = `🎉 Incrível! 3 estrelas ${stars}`;
+            } else if (vidas === 2) {
+                stars = '⭐⭐';
+                message = `🎊 Muito bom! 2 estrelas ${stars}`;
+            } else {
+                stars = '⭐';
+                message = `👍 Parabéns! 1 estrela ${stars}`;
+            }
+            
+            showMessage(`${message}<br>Pontuação: ${score}`);
+        }
+
+        // Função para atualizar display
+        function updateDisplay() {
+            scoreElement.textContent = `Score: ${score}`;
+            
+            // Atualizar corações
+            const hearts = livesElement.querySelectorAll('.life');
+            hearts.forEach((heart, index) => {
+                if (index < vidas) {
+                    heart.textContent = '❤️';
+                } else {
+                    heart.textContent = '🖤';
+                }
+            });
+        }
+
+        // Função para mostrar mensagem
+        function showMessage(msg) {
+            messageElement.innerHTML = msg;
+            messageElement.style.display = 'block';
+        }
+
+        // Função para limpar mensagem
+        function clearMessage() {
+            messageElement.style.display = 'none';
+        }
+
+        // Função para salvar pontuação
+        function saveHighScore(newScore) {
+            let highScores = JSON.parse(localStorage.getItem('highScores')) || [];
+            highScores.push(newScore);
+            highScores.sort((a, b) => b - a);
+            highScores = highScores.slice(0, 5);
+            localStorage.setItem('highScores', JSON.stringify(highScores));
+        }
+
+        // Função para renderizar high scores
+        function renderHighScores() {
+            const highScores = JSON.parse(localStorage.getItem('highScores')) || [];
+            highScoresElement.innerHTML = '';
+            
+            if (highScores.length === 0) {
+                highScoresElement.innerHTML = '<li><span>Nenhuma pontuação ainda</span></li>';
+                return;
+            }
+            
+            highScores.forEach((score, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${index + 1}º lugar</span>
+                    <span>${score} pontos</span>
+                `;
+                highScoresElement.appendChild(li);
+            });
+        }
+
+        // Inicialização
+        showMenu();
+        renderHighScores();
+        drawBackground();
+        
+        // Selecionar tema padrão
+        themeButtons[0].style.background = 'linear-gradient(45deg, #ffd93d, #ff6b6b)';
+        temaAtual = 'shapes';
+    </script>
+</body>
+</html>
